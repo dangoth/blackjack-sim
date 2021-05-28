@@ -2,9 +2,6 @@ from multiprocessing import Process
 import os
 import random
 
-#number of decks
-#% of the pack reshuffle
-#seed rng when starting game
 
 class Player:
 
@@ -16,9 +13,7 @@ class Player:
         self.dealer = False
 
     def __str__(self):
-        person = "dealer" if self.dealer == True else "player"
-        returnString = f'This {person} has {self.score["win"]} wins, {self.score["lose"]} losses and {self.score["draw"]} draws'
-        return returnString
+        return f'{self.score["win"]} wins, {self.score["lose"]} losses and {self.score["draw"]} draws'
 
     def getScore(self, player):
         return sum(player.hand)
@@ -39,9 +34,8 @@ class Player:
                 player.dealerDecide(player)
             else:
                 player.playing = False
-                player.score["lose"] += 1
                 print("Dealer busted")
-                return "bust"
+                return
         #soft 17 - dealer hits if sum is 17 with ace in hand
         elif currSum == self.target:
             if 11 in player.hand:
@@ -72,7 +66,6 @@ class Player:
                 player.decide(player)
             else:
                 player.playing = False
-                player.score["lose"] += 1
                 print("Player busted")
                 return
         elif currSum < self.target:
@@ -84,10 +77,7 @@ class Player:
             return
 
 
-
-
 class Deck:
-
 
     def __init__(self):
         self.cards = []
@@ -99,12 +89,8 @@ class Deck:
     def shuffle(self):
         self.cards = []
         for i in range(self.numDecks):
-            self.cards += [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11,
-                            2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11,
-                            2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11,
-                            2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]
+            self.cards += [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11] * 4
         self.numCards = self.numDecks * 52
-
 
 
 class Game:
@@ -166,8 +152,12 @@ class Game:
                 else:
                     players[i].score['lose'] += 1
 
-        for player in players:
-            print(player)
+        for _ in range(len(players)):
+            if _ == 0:
+                print(f"Dealer has {players[_]}")
+            else:
+                print(f"Player {_} has {players[_]}")
+
 
 if __name__ == "__main__":
 
@@ -177,7 +167,7 @@ if __name__ == "__main__":
             playerInput = int(playerInput)
         except ValueError:
             print("Input must be an integer")
-            get_int(variable, maximum)
+            playerInput = get_int(variable, maximum)
         playerInput = int(playerInput)
         if not 0 < playerInput <= maximum:
             print(f"Value must be between 1-{maximum}")
