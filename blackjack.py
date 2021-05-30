@@ -10,7 +10,6 @@ class Player:
         self.hand = []
         self.target = target
         self.playing = False
-        self.dealer = False
 
     def __str__(self):
         return f'{self.score["win"]} wins, {self.score["lose"]} losses and {self.score["draw"]} draws'
@@ -18,64 +17,73 @@ class Player:
     def getScore(self, player):
         return sum(player.hand)
 
-    def drawCard(self, Deck, player):
-        choice = random.randint(0, Deck.numCards-1)
-        player.hand.append(Deck.cards[choice])
-        Deck.cards.pop(choice)
-        Deck.numCards -= 1
-        print(f"Player's new hand is {player.hand}")
-
-    def dealerDecide(self, player):
-        currSum = sum(player.hand)
-        print(f"Hand sum in dealer decide function is {currSum}")
-        if currSum > 21:
-            if 11 in player.hand:
-                player.hand[player.hand.index(11)] = 1
-                player.dealerDecide(player)
-            else:
-                player.playing = False
-                print("Dealer busted")
-                return
-        #soft 17 - dealer hits if sum is 17 with ace in hand
-        elif currSum == self.target:
-            if 11 in player.hand:
-                player.hand[player.hand.index(11)] = 1
-                print("Dealer decides to hit")
-                player.drawCard(deck, player)
-                player.dealerDecide(player)
-            else:
-                print("Dealer decides to stand")
-                return
-        elif currSum < self.target:
-            print("Dealer decides to hit")
-            player.drawCard(deck, player)
-            player.dealerDecide(player)
-        else:
-            print("Dealer decides to stand")
-            return
+    def drawCard(self, deck, player):
+        choice = random.randint(0, deck.numCards-1)
+        player.hand.append(deck.cards[choice])
+        deck.cards.pop(choice)
+        deck.numCards -= 1
+        #print(f"Player's new hand is {player.hand}")
 
 
     def decide(self, player):
-        currSum = sum(player.hand)
-        print(f"Hand sum in player decide function is {currSum}")
+        currSum = player.getScore(player)
+        #print(f"Hand sum in player decide function is {currSum}")
         if currSum > 21:
             if 11 in player.hand:
-                print("Player has an 11, recalculating as 1")
                 player.hand[player.hand.index(11)] = 1
-                print(f"Should have changed hand, new hand is {player.hand}")
+                #print(f"Changed ace into 1, new hand is {player.hand}")
                 player.decide(player)
             else:
                 player.playing = False
                 print("Player busted")
                 return
         elif currSum < self.target:
-            print("Player decides to hit")
+            #print("Player decides to hit")
             player.drawCard(deck, player)
             player.decide(player)
         else:
-            print("Player decides to stand")
+            #print("Player decides to stand")
             return
 
+class Dealer(Player):
+
+    def __init__(self, target):
+        super().__init__(target)
+
+    def getScore(self, dealer):
+        return sum(dealer.hand)
+
+    def drawCard(self, deck, player):
+        super().drawCard(deck, player)
+
+    def decide(self, dealer):
+        currSum = dealer.getScore(dealer)
+        #print(f"Hand sum in dealer decide function is {currSum}")
+        if currSum > 21:
+            if 11 in dealer.hand:
+                dealer.hand[dealer.hand.index(11)] = 1
+                dealer.decide(dealer)
+            else:
+                dealer.playing = False
+                print("Dealer busted")
+                return
+        #soft 17 - dealer hits if sum is 17 with ace in hand
+        elif currSum == self.target:
+            if 11 in dealer.hand:
+                dealer.hand[dealer.hand.index(11)] = 1
+                #print("Dealer decides to hit")
+                dealer.drawCard(deck, dealer)
+                dealer.decide(dealer)
+            else:
+                #print("Dealer decides to stand")
+                return
+        elif currSum < self.target:
+            #print("Dealer decides to hit")
+            dealer.drawCard(deck, dealer)
+            dealer.decide(dealer)
+        else:
+            #print("Dealer decides to stand")
+            return
 
 class Deck:
 
@@ -102,20 +110,24 @@ class Game:
 
     def play_game(self, players, deck):
         random.seed()
-        if deck.numDecks*52 // deck.numCards < deck.percentToShuffle:
+        print(f"Current num of cards is {deck.numCards}, left side is {deck.numCards / (deck.numDecks*52)}, right side is {float(deck.percentToShuffle)}, eval is {(deck.numCards / (deck.numDecks*52)) < float(deck.percentToShuffle)}")
+        print(deck.percentToShuffle)
+        if deck.numCards / (deck.numDecks*52) < float(deck.percentToShuffle):
+            print("Shuffling deck")
             deck.shuffle()
+            #print(f"Shuffled deck is {deck.cards}")
         for player in self.players:
             player.playing = True
-            player.drawCard(deck, player)
-            player.drawCard(deck, player)
-
+        for _ in range(2):
+            for player in players:
+                player.drawCard(deck, player)
         for player in self.players[1:]:
-            print(f"New player choses, his hand is {player.hand}")
+            #print(f"New player choses, his hand is {player.hand}")
             player.decide(player)
 
         #dealer
-        print("Dealer choses")
-        players[0].dealerDecide(player)
+        #print("Dealer chooses")
+        players[0].decide(players[0])
 
         print("Post game evaluation")
         scores = []
@@ -124,6 +136,8 @@ class Game:
                 scores.append(player.getScore(player))
             else:
                 scores.append(0)
+        for player in players:
+            player.hand = []
         winning = max(scores)
         print(f"Scores are {scores}, winning is {winning}")
         #dealer has the highest score
@@ -131,12 +145,12 @@ class Game:
             if scores.count(scores[0]) == 1:
                 print("Dealer wins")
                 players[0].score['win'] += 1
+                for i in range(1, len(players)):
+                    players[i].score['lose'] += 1
             else:
                 #dealer drew with 1 or more players
                 print("Draw between dealer and 1 or more players")
-                for i in range(len(scores)):
-                    if scores[i] == 0:
-                        continue
+                for i in range(1, len(players)):
                     if scores[i] == scores[0]:
                         players[i].score['draw'] += 1
                     else:
@@ -145,8 +159,6 @@ class Game:
         elif winning > scores[0]:
             print("One or more players won")
             for i in range(len(scores)):
-                if scores[i] == 0:
-                    continue
                 if scores[i] == winning:
                     players[i].score['win'] += 1
                 else:
@@ -176,10 +188,9 @@ if __name__ == "__main__":
 
     def create_players(playerCount, playerTarget):
         #dealer
-        game.players.append(Player(target=17))
+        game.players.append(Dealer(target=17))
         for i in range(game.playerCount):
             game.players.append(Player(game.playerTarget))
-        game.players[0].dealer = True
 
     game = Game()
 
@@ -191,7 +202,8 @@ if __name__ == "__main__":
     deck = Deck()
     deck.numDecks = get_int("number of decks", 6)
     deck.numCards = deck.numDecks * 52
-    deck.percentToshuffle = max(40, get_int("percentage of cards left to shuffle the deck", 95))
+    deck.percentToShuffle = get_int("percentage of cards left to shuffle the deck", 95)
     deck.shuffle()
 
-    game.play_game(game.players, deck)
+    for i in range(100000):
+        game.play_game(game.players, deck)
