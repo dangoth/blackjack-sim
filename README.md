@@ -15,6 +15,7 @@ Dealer plays a soft 17, i.e. if the dealer's hand includes an ace (11) and the t
 
 ## Changelog
 
+* v0.3 - separated scoring method, simplified/remove certain methods, added multiprocessing with 100k iterations per CPU core
 * v0.2 - separated dealer class, fixed deck reshuffle condition, added multiple iterations (100k default), commented out prints
 * v0.1.1 - sanitized input, numbered players in endgame screen. leaving prints for future changes
 * v0.1 - Working single-iteration run
