@@ -10,8 +10,8 @@ Dealer plays a soft 17, i.e. if the dealer's hand includes an ace (11) and the t
 
 
 ## To be added
-* Multiple iterations to be ran at the time, deck reshuffling to be implemented simultaneously
-* Multiprocessing to utilize every core
+* ~~Multiple iterations to be ran at the time, deck reshuffling to be implemented simultaneously~~
+* ~~Multiprocessing to utilize every core~~
 
 ## Changelog
 
