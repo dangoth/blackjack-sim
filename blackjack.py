@@ -167,7 +167,7 @@ if __name__ == "__main__":
     def create_players(playerCount, playerTarget):
         #dealer
         game.players.append(Dealer(target=17))
-        for i in range(game.playerCount):
+        for _ in range(game.playerCount):
             game.players.append(Player(game.playerTarget))
 
     game = Game()
